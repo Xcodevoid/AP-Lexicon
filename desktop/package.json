@@ -1,0 +1,54 @@
+{
+  "name": "ap-lexicon-desktop",
+  "productName": "AP Lexicon",
+  "version": "0.2.0",
+  "description": "Bilingual AP vocabulary mastery \u2014 desktop app",
+  "main": "main.mjs",
+  "private": true,
+  "author": "AP Lexicon",
+  "dependencies": {
+    "embedded-postgres": "17.11.0-beta.19"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "com.aplexicon.desktop",
+    "productName": "AP Lexicon",
+    "asar": false,
+    "files": [
+      "main.mjs",
+      "runtime.mjs",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build/app-resources",
+        "to": "app-resources"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "icon": "build/icon.png",
+      "identity": null,
+      "target": [
+        {
+          "target": "zip"
+        }
+      ]
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "xcodevoid",
+        "repo": "ap-lexicon"
+      }
+    ]
+  },
+  "repository": "https://github.com/xcodevoid/ap-lexicon"
+}

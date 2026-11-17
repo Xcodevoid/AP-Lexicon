@@ -17,7 +17,8 @@ export async function createSession(userId: string) {
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // The desktop app serves over http://127.0.0.1, so it sets COOKIE_INSECURE=1
+    secure: process.env.NODE_ENV === "production" && process.env.COOKIE_INSECURE !== "1",
     path: "/",
     expires: expiresAt,
   });

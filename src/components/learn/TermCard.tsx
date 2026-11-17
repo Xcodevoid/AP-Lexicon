@@ -30,8 +30,10 @@ export interface CardTerm {
 }
 
 /** Bilingual term card. English and Chinese explanations are shown together; "flip" turns it into a self-test. */
-export function TermCard({ t, subjectName, onBookmark }: { t: CardTerm; subjectName: string; onBookmark?: (v: boolean) => void }) {
+export function TermCard({ t, subjectName, onBookmark, languageMode = "BALANCED" }: { t: CardTerm; subjectName: string; onBookmark?: (v: boolean) => void; languageMode?: "FULL" | "BALANCED" | "EXAM" }) {
   const [flipped, setFlipped] = useState(false);
+  // Exam mode hides Chinese until the student asks for it.
+  const [zhOpen, setZhOpen] = useState(languageMode !== "EXAM");
   const [showMis, setShowMis] = useState(true);
   const [bookmarked, setBookmarked] = useState(t.bookmarked);
   const toast = useToast();
@@ -71,7 +73,11 @@ export function TermCard({ t, subjectName, onBookmark }: { t: CardTerm; subjectN
           <div className="mt-5 flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <h2 className="display break-words text-[34px] font-semibold leading-[1.05] md:text-5xl">{t.term}</h2>
-              <p className="zh mt-2 text-2xl font-medium text-brand-500 md:text-[28px]" lang="zh-CN">{t.zh}</p>
+              {zhOpen ? (
+                <p className="zh mt-2 text-2xl font-medium text-brand-500 md:text-[28px]" lang="zh-CN">{t.zh}</p>
+              ) : (
+                <button type="button" onClick={() => setZhOpen(true)} className="mt-3 rounded-xl border border-dashed hairline px-3 py-1.5 text-sm font-semibold text-brand-500">Exam mode · tap to show 中文</button>
+              )}
               {t.pronunciation && <p className="mt-1 font-mono text-sm text-subtle">{t.pronunciation}</p>}
             </div>
             <Pronounce text={t.term} audioUrl={t.audioUrl} />
@@ -84,7 +90,7 @@ export function TermCard({ t, subjectName, onBookmark }: { t: CardTerm; subjectN
             </section>
             <section className="rounded-2xl sunken p-4" lang="zh-CN">
               <h3 className="eyebrow mb-1.5">中文概念解释</h3>
-              <p className="zh text-[16px] leading-relaxed">{t.zhExplanation || t.zh}</p>
+              {zhOpen ? <p className="zh text-[16px] leading-relaxed">{t.zhExplanation || t.zh}</p> : <p className="text-sm text-subtle">Hidden in Exam mode — try explaining it in English first.</p>}
             </section>
           </div>
 

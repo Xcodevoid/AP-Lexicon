@@ -130,7 +130,7 @@ export function MissionView({ topic, subject, unit, terms, languageMode, initial
             <span>Card {cardIdx + 1} of {terms.length}</span>
             <span className="hidden sm:inline">Use <span className="kbd">←</span> <span className="kbd">→</span> to move</span>
           </div>
-          <TermCard key={terms[cardIdx].id} t={terms[cardIdx]} subjectName={subject.name} />
+          <TermCard key={terms[cardIdx].id + languageMode} t={terms[cardIdx]} subjectName={subject.name} languageMode={languageMode} />
           <div className="mt-5 flex items-center justify-between gap-3">
             <Button variant="secondary" onClick={() => move(-1)} disabled={cardIdx === 0} aria-label="Previous card"><ChevronLeft size={18} /> Previous</Button>
             <div className="hidden gap-1.5 sm:flex" aria-hidden>

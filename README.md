@@ -8,6 +8,10 @@ A bilingual (English · 简体中文) AP vocabulary mastery platform for Chinese
 
 ---
 
+## Mac desktop app
+
+A double-click macOS app (Electron + built-in PostgreSQL, works offline) can be built with `scripts/build-desktop.sh arm64` (Apple Silicon) or `x64` (Intel). See [`desktop/README.md`](desktop/README.md) for installing and building.
+
 ## Quick start (local)
 
 Requirements: Node 20+ (tested on 22), PostgreSQL 14+ (tested on 16).
@@ -39,7 +43,7 @@ On the landing page choose **Try the demo** (isolated demo student, no password)
 | Command | What it does |
 |---|---|
 | `npm run dev` / `npm run build && npm start` | Dev server / production server |
-| `npm test` | 38 unit tests: FSRS scheduler, mastery scoring, grading, gamification, import validation, authorization, question generation, decoder |
+| `npm test` | 39 unit tests: FSRS scheduler, mastery scoring, grading, gamification, import validation, authorization, question generation, decoder |
 | `npm run test:e2e` | 6 Playwright journeys against a production build (needs a seeded DB and `.env` loaded; see below) |
 | `npm run typecheck` | TypeScript check |
 | `npm run content:check` | Validate all `.lex` content files (errors fail; `--verbose` lists warnings) |
@@ -55,7 +59,7 @@ Running E2E: `npm run build`, then `set -a; . ./.env; set +a; npm run test:e2e`.
 
 **Core loop (complete):** Mastery Map → select mission → bilingual cards → practice → server-graded feedback → FSRS + 3-D mastery update → map node status and unlocks update → return to map.
 
-- **Mastery Maps** for 16 subjects. Each unit is a region with connected mission nodes, a progress path, unlock rules and a unit-challenge citadel. Nodes show *mastery* (ring = share of terms Practicing/Mastered; gold = all Mastered), not completion. First mission of every region is open (classes move in different orders); later missions unlock when the previous one reaches Practicing (≥60% of terms Practicing or better). Unlock and mastery celebrations.
+- **Mastery Maps** for 17 subjects (16 AP courses + Math & Science Foundations). Each unit is a region with connected mission nodes, a progress path, unlock rules and a unit-challenge citadel. Nodes show *mastery* (ring = share of terms Practicing/Mastered; gold = all Mastered), not completion. First mission of every region is open (classes move in different orders); later missions unlock when the previous one reaches Practicing (≥60% of terms Practicing or better). Unlock and mastery celebrations.
 - **Bilingual term cards**: English term, Chinese, English definition and 中文概念解释 side by side, AP example, real-world use, misconceptions, related / easily-confused terms, diagram, pronunciation (recorded audio URL if provided, otherwise browser speech synthesis), bookmark, flip-to-self-test.
 - **Five stages**: Discover; Recognize (EN↔中文 MCQs + 60-second timed match with personal bests); Understand (definition↔term, authored scenarios); Apply (AP-context cloze, authored graph/passage/MCQ items); Master (English-only typed cloze + written response with rubric self-assessment). Immediate feedback with per-option rationales and 中文解析; **unit challenges** use delayed (assessment-style) feedback, 8-minute timer, English only.
 - **Adaptive engine**: FSRS-4.5 scheduler with persistent review logs; daily review queue (overdue first, then weak concepts, goal-subject boost); each review targets the student's weakest dimension. Errors classified as translation / concept / application / confusion-with-related-term.
@@ -89,7 +93,8 @@ Running E2E: `npm run build`, then `set -a; . ./.env; set +a; npm run test:e2e`.
 | AP Statistics | 9 | 46 | 2 | 3 |
 | AP Computer Science A | 4 | 42 | 2 | 2 |
 | AP Computer Science Principles | 5 | 37 | 2 | 2 |
-| **Total** | | **1,002** | **84** | **40** |
+| Math & Science Foundations (everyday words used across AP math/science) | 6 | 155 | 4 | 4 |
+| **Total** | | **1,157** | **88** | **44** |
 
 Sources: all 385 IDs from `AP_Lexicon_Bilingual_Vocabulary_Master.xlsx` are mapped (checked by `npm run content:check` and a unit test); AP Physics 1 is organised from the uploaded Physics 1 notes; Calculus BC from the BC notes; AP Precalculus includes all 160 EN/中文 pairs from the Precalc Numbers sheet (Chinese kept as supplied, definitions added); the rest is AP Lexicon research expansion. Every term also gets auto-generated recognition/concept/cloze practice, so every mission is playable even where few authored questions exist. See [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md) for editorial notes and corrections made to the master sheet.
 

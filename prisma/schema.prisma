@@ -1,6 +1,7 @@
 // AP Lexicon data model. See docs/ARCHITECTURE.md for an explanation of each entity.
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64", "darwin"]
 }
 
 datasource db {

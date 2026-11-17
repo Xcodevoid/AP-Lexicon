@@ -122,7 +122,9 @@ export function DecoderView({ subjects, practice, languageMode, focus }: { subje
             </div>
             <div className="surface rounded-3xl p-5">
               <h3 className="eyebrow">Skill being tested · 考查能力</h3>
-              <ul className="mt-3 space-y-2 text-sm">{res.skills.map((s) => <li key={s.skill} className="flex gap-2"><ListChecks size={16} className="mt-0.5 shrink-0 text-teal-500" /><span>{s.skill}{zh && <span className="zh block text-xs text-subtle">{s.skillZh}</span>}</span></li>)}</ul>
+              {res.skills.length ? (
+                <ul className="mt-3 space-y-2 text-sm">{res.skills.map((s) => <li key={s.skill} className="flex gap-2"><ListChecks size={16} className="mt-0.5 shrink-0 text-teal-500" /><span>{s.skill}{zh && <span className="zh block text-xs text-subtle">{s.skillZh}</span>}</span></li>)}</ul>
+              ) : <p className="mt-3 text-sm text-muted">No specific skill detected — the question may be too short. Paste the full question, including any answer choices.</p>}
             </div>
             <div className="surface rounded-3xl p-5">
               <h3 className="eyebrow">Wording to watch · 注意措辞</h3>
@@ -135,6 +137,15 @@ export function DecoderView({ subjects, practice, languageMode, focus }: { subje
             </div>
           </div>
 
+          {res.terms.length === 0 && (
+            <div className="rounded-3xl border border-dashed hairline p-5 text-sm">
+              <p className="font-semibold">No AP Lexicon vocabulary found in this text.</p>
+              <p className="mt-1 text-muted">
+                {subject ? "Try “Detect subject automatically”, or check the spelling." : "Choose the subject above — some everyday words (like “state” or “range”) are only matched when a subject is selected."}
+                {" "}Every word in the app can be searched in your <a href="/notebook" className="font-semibold text-brand-500">Notebook</a>; admins can add missing words in Content admin.
+              </p>
+            </div>
+          )}
           {res.terms.length > 0 && (
             <div className="surface rounded-3xl p-5">
               <h3 className="eyebrow">Key vocabulary · 关键词汇 ({res.terms.length})</h3>

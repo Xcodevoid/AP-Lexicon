@@ -60,6 +60,12 @@ describe("question decoder (deterministic)", () => {
     expect(r.subjectGuess?.slug).toBe("ap-microeconomics");
     expect(r.skills.some((s) => s.skill === "Causal reasoning")).toBe(true);
   });
+  it("recognises a plain 'What is …?' question and finds the term", () => {
+    const withRadius: GlossaryEntry[] = [...g, { id: "r1", term: "radius", zh: "半径", definition: "Center to edge", subjectSlug: "foundations-math-science", subjectShort: "Foundations", category: "Subject concept" }];
+    const r = decodeQuestion("What is a radius", withRadius);
+    expect(r.terms.map((t) => t.term)).toEqual(["radius"]);
+    expect(r.skills[0].skill).toMatch(/definition/);
+  });
   it("does not treat ambiguous common words as terms without a chosen subject, and never outputs an answer", () => {
     const r = decodeQuestion("In which state did the event happen, and explain its causes?", g);
     expect(r.terms.find((t) => t.term === "state")).toBeUndefined();

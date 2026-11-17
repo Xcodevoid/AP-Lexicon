@@ -7,6 +7,8 @@ const securityHeaders = [
 ];
 const nextConfig = {
   reactStrictMode: true,
+  // The desktop app ships a self-contained server (see desktop/README.md)
+  ...(process.env.STANDALONE === "1" ? { output: "standalone" } : {}),
   poweredByHeader: false,
   serverExternalPackages: ["@prisma/client"],
   async headers() {

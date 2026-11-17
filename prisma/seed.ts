@@ -13,7 +13,7 @@ import { hashPassword } from "../src/lib/auth/password";
 const prisma = new PrismaClient();
 
 async function main() {
-  const dir = path.resolve(__dirname, "../content/subjects");
+  const dir = process.env.CONTENT_DIR ?? path.resolve(__dirname, "../content/subjects");
   const sources = readdirSync(dir).filter((f) => f.endsWith(".lex")).sort().map((f) => ({ name: f, text: readFileSync(path.join(dir, f), "utf8") }));
   const { bundle, issues } = compileLexSources(sources);
   const errors = issues.filter((i) => i.level === "error");

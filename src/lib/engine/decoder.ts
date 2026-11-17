@@ -43,6 +43,7 @@ export const COMMAND_FAMILIES: { verbs: string[]; skill: string; skillZh: string
 ];
 
 const CUES: { re: RegExp; skill: string; skillZh: string }[] = [
+  { re: /^\s*(what (is|are|does)|what's|define|which term|which of the following (is|best describes))\b/i, skill: "Recall a definition or identify a concept", skillZh: "回忆定义或识别概念" },
   { re: /\b(graph|curve|diagram|axis|axes|shift(?:s|ed)?)\b/i, skill: "Interpreting a graph or diagram", skillZh: "图表解读" },
   { re: /\b(data|table|values?|percent|%|rate)\b/i, skill: "Working with data", skillZh: "数据处理" },
   { re: /\b(source|document|passage|excerpt|author|historian|speech|letter)\b/i, skill: "Source analysis (author, purpose, context)", skillZh: "史料分析（作者、目的、背景）" },
