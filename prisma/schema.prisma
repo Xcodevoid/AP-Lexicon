@@ -1,0 +1,411 @@
+// AP Lexicon data model. See docs/ARCHITECTURE.md for an explanation of each entity.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum LanguageMode {
+  FULL
+  BALANCED
+  EXAM
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ReviewStatus {
+  DRAFT
+  TEACHER_REVIEW
+  APPROVED
+  NEEDS_FIX
+}
+
+enum Skill {
+  TRANSLATION // recognising the term <-> Chinese mapping
+  CONCEPT // understanding the English concept
+  APPLICATION // using the term in AP context
+}
+
+enum Stage {
+  DISCOVER
+  RECOGNIZE
+  UNDERSTAND
+  APPLY
+  MASTER
+}
+
+enum QuestionType {
+  MCQ
+  SCENARIO
+  PASSAGE
+  GRAPH
+  CLOZE
+  WRITTEN
+}
+
+enum ErrorType {
+  TRANSLATION
+  CONCEPT
+  APPLICATION
+  CONFUSION
+}
+
+enum CardState {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
+}
+
+model User {
+  id                 String       @id @default(cuid())
+  email              String       @unique
+  passwordHash       String?
+  name               String
+  role               Role         @default(STUDENT)
+  isDemo             Boolean      @default(false)
+  languageMode       LanguageMode @default(BALANCED)
+  grade              Int?
+  dailyGoalXp        Int          @default(60)
+  focusSubjects      String[]     @default([])
+  onboardedAt        DateTime?
+  leaderboardOptIn   Boolean      @default(false)
+  leaderboardAlias   String?
+  reducedMotion      Boolean      @default(false)
+  tzOffset           Int          @default(0) // minutes east of UTC, from the browser at onboarding
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  sessions     Session[]
+  termStates   UserTermState[]
+  reviewLogs   ReviewLog[]
+  xpEvents     XpEvent[]
+  achievements UserAchievement[]
+  collections  Collection[]
+  goals        StudyGoal[]
+  bests        PersonalBest[]
+  importJobs   ImportJob[]
+}
+
+model Session {
+  id        String   @id // sha256 of the opaque token stored in the cookie
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Subject {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  nameZh      String
+  shortName   String
+  description String        @default("")
+  theme       String        @default("blue") // map palette key
+  order       Int           @default(0)
+  status      ContentStatus @default(DRAFT)
+  frameworkNote String      @default("")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  units     Unit[]
+  terms     Term[]
+  questions Question[]
+  pairs     ConfusionPair[]
+}
+
+model Unit {
+  id          String        @id @default(cuid())
+  subjectId   String
+  subject     Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  number      Int
+  title       String
+  titleZh     String        @default("")
+  description String        @default("")
+  status      ContentStatus @default(PUBLISHED)
+
+  topics    Topic[]
+  terms     Term[]
+  questions Question[]
+
+  @@unique([subjectId, number])
+}
+
+model Topic {
+  id         String   @id @default(cuid())
+  unitId     String
+  unit       Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  code       String // e.g. "1.2"
+  title      String
+  titleZh    String   @default("")
+  objectives String[] @default([])
+  order      Int      @default(0)
+
+  terms Term[]
+
+  @@unique([unitId, code])
+}
+
+model Term {
+  id            String        @id @default(cuid())
+  externalId    String        @unique
+  subjectId     String
+  subject       Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  unitId        String?
+  unit          Unit?         @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  topicId       String?
+  topic         Topic?        @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  term          String
+  zh            String
+  definition    String
+  zhExplanation String        @default("")
+  pronunciation String?
+  audioUrl      String?
+  difficulty    Int           @default(2) // 1 foundation, 2 core, 3 advanced
+  category      String        @default("Subject concept")
+  tags          String[]      @default([])
+  misconceptions String[]     @default([])
+  apExample     String        @default("")
+  realWorld     String        @default("")
+  visual        Json?
+  imageUrl      String?
+  writtenPrompt String        @default("")
+  priority      String        @default("Medium")
+  source        String        @default("")
+  reviewStatus  ReviewStatus  @default(TEACHER_REVIEW)
+  status        ContentStatus @default(DRAFT)
+  order         Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  relationsFrom TermRelation[]   @relation("from")
+  relationsTo   TermRelation[]   @relation("to")
+  questions     QuestionTerm[]
+  states        UserTermState[]
+  logs          ReviewLog[]
+  collections   CollectionTerm[]
+
+  @@index([subjectId, status])
+  @@index([term])
+}
+
+model TermRelation {
+  fromId String
+  toId   String
+  kind   String // "related" | "confused"
+  from   Term   @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  to     Term   @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@id([fromId, toId, kind])
+}
+
+model Question {
+  id            String        @id @default(cuid())
+  externalId    String        @unique
+  subjectId     String
+  subject       Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  unitId        String?
+  unit          Unit?         @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  type          QuestionType
+  stage         Stage
+  skill         Skill
+  difficulty    Int           @default(2)
+  prompt        String
+  promptZh      String        @default("")
+  passage       String        @default("")
+  visual        Json?
+  options       Json // [{id, text, rationale, termExternalId?}]
+  answer        String        @default("") // option id, or accepted cloze answers separated by "|"
+  rubric        String[]      @default([]) // for WRITTEN questions: self-assessment criteria
+  explanation   String
+  explanationZh String        @default("")
+  source        String        @default("Original AP Lexicon practice item — not an official College Board question")
+  status        ContentStatus @default(DRAFT)
+  confusionPairId String?
+  confusionPair ConfusionPair? @relation(fields: [confusionPairId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  terms QuestionTerm[]
+  logs  ReviewLog[]
+}
+
+model QuestionTerm {
+  questionId String
+  termId     String
+  primary    Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  term       Term     @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, termId])
+}
+
+model ConfusionPair {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  termAId       String
+  termBId       String
+  keyDifference String
+  keyDifferenceZh String @default("")
+  dimensions    Json     // [{label, a, b}]
+  scenarios     Json     // [{text, answer: "A"|"B", why}]
+  visual        Json?
+  status        ContentStatus @default(PUBLISHED)
+
+  questions Question[]
+}
+
+/// Per-user, per-term FSRS memory state + three-dimensional mastery evidence.
+model UserTermState {
+  userId        String
+  termId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  term          Term      @relation(fields: [termId], references: [id], onDelete: Cascade)
+  state         CardState @default(NEW)
+  stability     Float     @default(0)
+  difficulty    Float     @default(0)
+  due           DateTime?
+  lastReview    DateTime?
+  reps          Int       @default(0)
+  lapses        Int       @default(0)
+  // Mastery evidence per dimension: exponentially-weighted accuracy (0..1) and count of graded attempts
+  recognition   Float     @default(0)
+  recognitionN  Int       @default(0)
+  concept       Float     @default(0)
+  conceptN      Int       @default(0)
+  application   Float     @default(0)
+  applicationN  Int       @default(0)
+  independentOk Int       @default(0) // correct English-only (no hint) application/mastery answers
+  hintsUsed     Int       @default(0) // Bilingual Bridge: how often Chinese support was opened for this term
+  status        String    @default("NOT_STARTED") // cached from mastery evidence (see src/lib/engine/mastery.ts)
+  score         Int       @default(0) // cached 0..100 mastery score
+  discoveredAt  DateTime?
+  bookmarked    Boolean   @default(false)
+  note          String    @default("")
+  updatedAt     DateTime  @updatedAt
+
+  @@id([userId, termId])
+  @@index([userId, due])
+  @@index([userId, status])
+}
+
+model ReviewLog {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  termId       String
+  term         Term       @relation(fields: [termId], references: [id], onDelete: Cascade)
+  questionId   String?
+  question     Question?  @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  generatedKey String? // for auto-generated questions, e.g. "en2zh:<termId>"
+  skill        Skill
+  stage        Stage
+  correct      Boolean
+  rating       Int // FSRS rating 1..4
+  errorType    ErrorType?
+  confusedWithId String?
+  usedHint     Boolean    @default(false)
+  responseMs   Int        @default(0)
+  answer       String     @default("")
+  mode         String     @default("learn") // learn | review | mastery | lab | challenge
+  elapsedDays  Float      @default(0)
+  scheduledDays Float     @default(0)
+  stabilityAfter Float    @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, termId])
+}
+
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model UserAchievement {
+  userId     String
+  key        String
+  unlockedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+}
+
+model PersonalBest {
+  userId    String
+  key       String // e.g. "match:<subjectSlug>"
+  value     Int
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+}
+
+model Collection {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String           @default("blue")
+  createdAt DateTime         @default(now())
+  terms     CollectionTerm[]
+
+  @@unique([userId, name])
+}
+
+model CollectionTerm {
+  collectionId String
+  termId       String
+  addedAt      DateTime   @default(now())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  term         Term       @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, termId])
+}
+
+model StudyGoal {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  subjectSlug String?
+  targetDate  DateTime
+  targetTerms Int       @default(20)
+  createdAt   DateTime  @default(now())
+  doneAt      DateTime?
+}
+
+model ImportJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename  String
+  format    String
+  created   Int      @default(0)
+  updated   Int      @default(0)
+  skipped   Int      @default(0)
+  errors    Json
+  createdAt DateTime @default(now())
+}

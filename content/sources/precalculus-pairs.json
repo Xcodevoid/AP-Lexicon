@@ -1,0 +1,638 @@
+[
+[
+"a zero of multiplicity 2",
+"二重根"
+],
+[
+"absolute extrema",
+"绝对极值"
+],
+[
+"absolute maximum",
+"绝对最大值（最大值）"
+],
+[
+"absolute minimum",
+"绝对最小值（最小值）"
+],
+[
+"absolute value",
+"绝对值"
+],
+[
+"absolute value function",
+"绝对值函数"
+],
+[
+"addition / subtraction property",
+"加（减）法性质"
+],
+[
+"approach",
+"趋近（于）"
+],
+[
+"arbitrary",
+"任意的"
+],
+[
+"asymptote",
+"渐近线"
+],
+[
+"average rate of change",
+"平均变化率"
+],
+[
+"best fit",
+"最佳拟合"
+],
+[
+"braces",
+"花括号 { }"
+],
+[
+"closed interval",
+"闭区间"
+],
+[
+"coefficient",
+"系数"
+],
+[
+"common factors",
+"公因式"
+],
+[
+"complement",
+"补集"
+],
+[
+"component",
+"组成部分，分项"
+],
+[
+"composite function",
+"复合函数"
+],
+[
+"compound proposition",
+"复合命题"
+],
+[
+"concave down",
+"凹向下（上凸）"
+],
+[
+"concave up",
+"凹向上（下凸）"
+],
+[
+"concavity",
+"凹凸性"
+],
+[
+"constant",
+"常数的，恒定的"
+],
+[
+"constant function",
+"常函数"
+],
+[
+"constant term",
+"常数项"
+],
+[
+"continuous",
+"连续的"
+],
+[
+"coordinate system",
+"坐标系"
+],
+[
+"correct to two decimal places",
+"精确到两位小数"
+],
+[
+"correspondence",
+"对应"
+],
+[
+"cube root",
+"立方根"
+],
+[
+"cubic function",
+"三次函数"
+],
+[
+"cubic model",
+"三次（多项式）模型"
+],
+[
+"declarative sentence",
+"陈述句"
+],
+[
+"decreasing",
+"递减的（减函数）"
+],
+[
+"degree",
+"次数（最高次数）"
+],
+[
+"denominator",
+"分母"
+],
+[
+"denote",
+"表示，记作"
+],
+[
+"dependent variable",
+"因变量"
+],
+[
+"Descartes' Rule of Signs",
+"笛卡尔符号法则"
+],
+[
+"descending order",
+"降幂（降序）排列"
+],
+[
+"dilation",
+"扩张，扩大"
+],
+[
+"discriminant",
+"判别式（Δ = b²-4ac）"
+],
+[
+"distinct",
+"互不相同的，不同的"
+],
+[
+"dividend",
+"被除数"
+],
+[
+"divisor",
+"除数"
+],
+[
+"domain",
+"定义域"
+],
+[
+"element",
+"元素"
+],
+[
+"empty set",
+"空集"
+],
+[
+"end behavior",
+"末端行为（端部趋势）"
+],
+[
+"endpoint",
+"端点"
+],
+[
+"equality",
+"等式"
+],
+[
+"evaluate",
+"求值，计算"
+],
+[
+"even function",
+"偶函数"
+],
+[
+"existential quantifier",
+"存在量词（∃）"
+],
+[
+"explicit form",
+"显式"
+],
+[
+"extreme value theorem",
+"极值定理"
+],
+[
+"factor",
+"因式，因子"
+],
+[
+"factor theorem",
+"因式定理"
+],
+[
+"finite set",
+"有限集"
+],
+[
+"function",
+"函数"
+],
+[
+"global maximum / global minimum",
+"全局最大值 / 全局最小值"
+],
+[
+"greatest integer function",
+"取整函数（高斯函数）"
+],
+[
+"hole",
+"空心（空洞）"
+],
+[
+"implicit form",
+"隐式"
+],
+[
+"increasing",
+"递增的（增函数）"
+],
+[
+"independent variable",
+"自变量"
+],
+[
+"index",
+"指数、根指数"
+],
+[
+"inequality",
+"不等式"
+],
+[
+"inference",
+"推论"
+],
+[
+"infinite set",
+"无限集"
+],
+[
+"infinity",
+"无穷大（∞）"
+],
+[
+"inflection point",
+"拐点"
+],
+[
+"input / output",
+"输入 / 输出"
+],
+[
+"integers",
+"整数"
+],
+[
+"intermediate value theorem",
+"中间值定理（介值定理）"
+],
+[
+"intersect",
+"相交，交叉"
+],
+[
+"intersection",
+"交集"
+],
+[
+"interval",
+"区间"
+],
+[
+"leading coefficient",
+"首项系数"
+],
+[
+"leading term",
+"首项（最高次项）"
+],
+[
+"limit",
+"极限"
+],
+[
+"linear function",
+"线性函数（一次函数）"
+],
+[
+"local maximum",
+"局部最大值（极大值）"
+],
+[
+"local minimum",
+"局部最小值（极小值）"
+],
+[
+"logical connectives",
+"逻辑联结词（or / and / not）"
+],
+[
+"lowest terms",
+"最简形式"
+],
+[
+"monotonicity",
+"单调性"
+],
+[
+"multiplication / division property",
+"乘（除）法性质"
+],
+[
+"multiplicity",
+"重数"
+],
+[
+"natural numbers",
+"自然数（含0）"
+],
+[
+"necessary condition",
+"必要条件"
+],
+[
+"negative number",
+"负数"
+],
+[
+"numerator",
+"分子"
+],
+[
+"oblique",
+"倾斜的"
+],
+[
+"odd function",
+"奇函数"
+],
+[
+"open interval",
+"开区间"
+],
+[
+"origin",
+"原点"
+],
+[
+"parabola",
+"抛物线"
+],
+[
+"parity",
+"奇偶性"
+],
+[
+"piecewise-defined function",
+"分段函数"
+],
+[
+"polynomial division",
+"多项式除法"
+],
+[
+"power function",
+"幂函数"
+],
+[
+"proper subset",
+"真子集"
+],
+[
+"proposition",
+"命题"
+],
+[
+"quadratic equation",
+"一元二次方程"
+],
+[
+"quadratic function",
+"二次函数"
+],
+[
+"quadratic inequality",
+"一元二次不等式"
+],
+[
+"quantifier",
+"量词"
+],
+[
+"quartic function",
+"四次函数"
+],
+[
+"quotient",
+"商"
+],
+[
+"radical",
+"根式"
+],
+[
+"radicand",
+"被开方数"
+],
+[
+"range",
+"值域"
+],
+[
+"rational function",
+"有理函数"
+],
+[
+"rational numbers",
+"有理数"
+],
+[
+"rational zeros theorem",
+"有理根定理"
+],
+[
+"real numbers",
+"实数"
+],
+[
+"real zero",
+"实数零点"
+],
+[
+"reciprocal function",
+"反比例函数"
+],
+[
+"reflection",
+"反射，翻折"
+],
+[
+"relation",
+"关系，对应关系"
+],
+[
+"relative extremum / local extremum",
+"相对极值 / 局部极值"
+],
+[
+"remainder",
+"余数"
+],
+[
+"remainder theorem",
+"余数定理"
+],
+[
+"reversal property",
+"反向（可逆）性质"
+],
+[
+"reverse",
+"反向"
+],
+[
+"roster method",
+"列举法"
+],
+[
+"scatter plot",
+"散点图"
+],
+[
+"secant line",
+"割线"
+],
+[
+"set",
+"集合"
+],
+[
+"set-builder notation",
+"描述法（特征性质描述法）"
+],
+[
+"shift",
+"平移"
+],
+[
+"simple proposition",
+"简单命题"
+],
+[
+"slope",
+"斜率"
+],
+[
+"smooth",
+"光滑的"
+],
+[
+"solution set",
+"解集"
+],
+[
+"square root",
+"平方根"
+],
+[
+"standard form",
+"标准形式"
+],
+[
+"subset",
+"子集"
+],
+[
+"sufficient condition",
+"充分条件"
+],
+[
+"sum / difference / product / quotient",
+"和 / 差 / 积 / 商"
+],
+[
+"symmetric / symmetry",
+"对称的 / 对称性"
+],
+[
+"transformation",
+"变换"
+],
+[
+"transitive property",
+"传递性"
+],
+[
+"truth table",
+"真值表"
+],
+[
+"truth-value",
+"真值（能否判断真假）"
+],
+[
+"turning point",
+"转折点"
+],
+[
+"unbounded",
+"无界的"
+],
+[
+"union",
+"并集"
+],
+[
+"universal quantifier",
+"全称量词（∀）"
+],
+[
+"universal set",
+"全集"
+],
+[
+"Venn Diagram",
+"韦恩图"
+],
+[
+"vertical asymptote",
+"垂直渐近线"
+],
+[
+"vertical-line test",
+"垂线检验法（竖线测试）"
+],
+[
+"x-intercept",
+"x轴截距（横截距）"
+],
+[
+"y-intercept",
+"y轴截距（纵截距）"
+],
+[
+"zero polynomial",
+"零多项式"
+],
+[
+"zeros of a function",
+"函数的零点"
+]
+]
