@@ -69,28 +69,48 @@ async function authoredFor(termIds: string[], stages: StageName[]) {
   });
 }
 
-/** Learn mode: one map mission (topic), one stage. */
+/**
+ * At most one question per word: hand-written questions first (a question covers every word it is linked to),
+ * then one generated question for each word that is still uncovered. Prevents the same word being asked twice
+ * in one session.
+ */
+function onePerWord(authored: PlayableQuestion[], terms: PoolTerm[], makeGenerated: (t: PoolTerm, i: number) => PlayableQuestion | null, rand: () => number) {
+  const covered = new Set<string>();
+  const out: PlayableQuestion[] = [];
+  for (const q of shuffle(authored, rand)) {
+    if (q.termIds.some((id) => covered.has(id))) continue;
+    q.termIds.forEach((id) => covered.add(id));
+    out.push(q);
+  }
+  terms.forEach((t, i) => {
+    if (covered.has(t.id)) return;
+    const g = makeGenerated(t, i);
+    if (g) { covered.add(t.id); out.push(g); }
+  });
+  return { questions: out, covered };
+}
+
+/** Learn mode: one map mission (topic), one stage. A fresh mix every time the stage is replayed. */
 export async function buildLearnSession(user: DbUser, topicId: string, stage: Exclude<StageName, "DISCOVER">) {
   const topic = await prisma.topic.findUnique({ where: { id: topicId }, include: { unit: { include: { subject: true } } } });
   if (!topic) throw new HttpError(404, "Mission not found");
   const pool = await loadPool(topic.unit.subjectId);
   const terms = pool.filter((p) => p.topicId === topicId);
   if (!terms.length) throw new HttpError(404, "This mission has no published vocabulary yet");
-  const today = new Date().toISOString().slice(0, 10);
-  const seed = `${user.id}:${topicId}:${stage}:${today}`;
-  const authored = (await authoredFor(terms.map((t) => t.id), [stage])).map((q) => authoredToPlayable(q, pool));
-  const generated: PlayableQuestion[] = [];
-  terms.forEach((t, i) => {
-    const g = generateFor(stage, t, pool, `${seed}:${t.id}`, i);
-    if (g) generated.push(g);
-  });
-  if (stage === "MASTER" && terms.length) {
-    const pick = terms[hashString(seed) % terms.length];
-    const w = buildGenerated("written", pick, pool, seed);
-    if (w) generated.push(w);
-  }
+  const seed = `${user.id}:${topicId}:${stage}:${Date.now()}`;
   const rand = mulberry32(hashString(seed));
-  const questions = shuffle([...authored, ...generated], rand).slice(0, stage === "RECOGNIZE" ? 10 : 12);
+  const authored = (await authoredFor(terms.map((t) => t.id), [stage])).map((q) => authoredToPlayable(q, pool));
+  const { questions: picked, covered } = onePerWord(authored, shuffle(terms, rand), (t, i) => generateFor(stage, t, pool, `${seed}:${t.id}`, i + Math.floor(rand() * 2)), rand);
+  let questions = shuffle(picked, rand).slice(0, stage === "RECOGNIZE" ? 10 : 12);
+  if (stage === "MASTER") {
+    // The written response uses a word not already asked in this session, when there is one.
+    const usedNow = new Set(questions.flatMap((q) => q.termIds));
+    const candidates = terms.filter((t) => !usedNow.has(t.id));
+    const pick = candidates.length ? candidates[Math.floor(rand() * candidates.length)] : null;
+    const w = pick ? buildGenerated("written", pick, pool, seed) : null;
+    if (w) questions = [...questions.slice(0, 11), w];
+  }
+  void covered;
   return { questions, meta: { subject: topic.unit.subject.name, subjectSlug: topic.unit.subject.slug, topic: topic.title, topicZh: topic.titleZh, stage, englishOnly: stage === "MASTER" } };
 }
 
@@ -139,6 +159,7 @@ export async function buildReviewSession(user: DbUser, subjectId?: string) {
   const today = new Date().toISOString().slice(0, 10);
   const pools = new Map<string, PoolTerm[]>();
   const questions: PlayableQuestion[] = [];
+  const covered = new Set<string>();
   for (const s of items) {
     const subj = s.term.subjectId;
     if (!pools.has(subj)) pools.set(subj, await loadPool(subj));
@@ -149,17 +170,21 @@ export async function buildReviewSession(user: DbUser, subjectId?: string) {
     const dim = weakestDimension(ev);
     const stage: Exclude<StageName, "DISCOVER"> =
       s.status === "MASTERED" ? "MASTER" : dim === "recognition" ? "RECOGNIZE" : dim === "concept" ? "UNDERSTAND" : "APPLY";
-    // prefer an authored item for concept/application when one exists and was not just seen
+    // A hand-written question can cover several words; never ask a word twice in one review.
+    if (covered.has(t.id)) continue;
+    // prefer an authored item for concept/application when one exists
     if (stage === "UNDERSTAND" || stage === "APPLY") {
-      const authored = await authoredFor([t.id], [stage]);
+      const authored = (await authoredFor([t.id], [stage])).filter((q) => !q.terms.some((x) => covered.has(x.termId)));
       if (authored.length) {
         const q = authored[hashString(`${user.id}:${t.id}:${today}`) % authored.length];
-        questions.push(authoredToPlayable(q, pool));
+        const playable = authoredToPlayable(q, pool);
+        playable.termIds.forEach((id) => covered.add(id));
+        questions.push(playable);
         continue;
       }
     }
     const g = generateFor(stage, t, pool, `${user.id}:${t.id}:${today}:review`, s.reps);
-    if (g) questions.push(g);
+    if (g) { covered.add(t.id); questions.push(g); }
   }
   return { questions, meta: { dueCount, stage: "REVIEW" } };
 }
@@ -176,6 +201,82 @@ export async function buildMasteryChallenge(user: DbUser, unitId: string) {
   const generated = terms.map((t, i) => generateFor(i % 2 ? "MASTER" : "APPLY", t, pool, `${seed}:${t.id}`, i)).filter(Boolean) as PlayableQuestion[];
   const questions = shuffle([...authored, ...generated], mulberry32(hashString(seed))).slice(0, 10).map((q) => ({ ...q, hintZh: undefined, options: q.options?.map((o) => ({ id: o.id, text: o.text })) }));
   return { questions, meta: { subject: unit.subject.name, subjectSlug: unit.subject.slug, unit: unit.title, stage: "MASTER", englishOnly: true, timeLimitSec: 8 * 60 } };
+}
+
+/**
+ * Game sessions (Games hub). Terms the student has already started come first so games reinforce
+ * what they are learning; new terms fill the rest. Every answer is graded by /api/answer like any other.
+ */
+export async function buildGameSession(user: DbUser, subjectSlug: string, game: "lightning" | "spell" | "boss") {
+  const subject = await prisma.subject.findUnique({ where: { slug: subjectSlug } });
+  if (!subject || subject.status !== "PUBLISHED") throw new HttpError(404, "Subject not found");
+  const pool = await loadPool(subject.id);
+  if (pool.length < 6) throw new HttpError(400, "This subject needs more vocabulary for games");
+  const started = new Set((await prisma.userTermState.findMany({ where: { userId: user.id, termId: { in: pool.map((p) => p.id) }, status: { not: "NOT_STARTED" } }, select: { termId: true } })).map((s) => s.termId));
+  const seed = `${user.id}:${game}:${Date.now()}`;
+  const rand = mulberry32(hashString(seed));
+  const ordered = [...shuffle(pool.filter((p) => started.has(p.id)), rand), ...shuffle(pool.filter((p) => !started.has(p.id)), rand)];
+  const questions: PlayableQuestion[] = [];
+  if (game === "lightning") {
+    for (const t of ordered.slice(0, 40)) { const q = buildGenerated("def2term", t, pool, `${seed}:${t.id}`); if (q) questions.push({ ...q, hintZh: undefined, options: q.options?.map((o) => ({ id: o.id, text: o.text })) }); }
+  } else if (game === "spell") {
+    for (const t of ordered.filter((x) => x.term.length <= 28).slice(0, 10)) { const q = buildGenerated("spell", t, pool, seed); if (q) questions.push(q); }
+  } else {
+    const focus = ordered.slice(0, 14);
+    const authored = (await authoredFor(focus.map((t) => t.id), ["UNDERSTAND", "APPLY"])).filter((q) => q.type !== "WRITTEN").map((q) => authoredToPlayable(q, pool));
+    const { questions: mixed } = onePerWord(authored, focus, (t, i) => generateFor(i % 3 === 0 ? "UNDERSTAND" : "APPLY", t, pool, `${seed}:${t.id}`, i), rand);
+    questions.push(...shuffle(mixed, rand).slice(0, 12).map((q) => ({ ...q, hintZh: undefined, options: q.options?.map((o) => ({ id: o.id, text: o.text })) })));
+  }
+  return { questions, meta: { subject: subject.name, subjectSlug: subject.slug, game } };
+}
+
+/** Connections puzzle: 4 missions × 4 terms. The grouping stays on the server; tiles carry no topic info. */
+export async function buildConnections(subjectSlug: string) {
+  const subject = await prisma.subject.findUnique({ where: { slug: subjectSlug } });
+  if (!subject || subject.status !== "PUBLISHED") throw new HttpError(404, "Subject not found");
+  const pool = await loadPool(subject.id);
+  const byTopic = new Map<string, PoolTerm[]>();
+  for (const t of pool) if (t.topicId) byTopic.set(t.topicId, [...(byTopic.get(t.topicId) ?? []), t]);
+  const rand = mulberry32(hashString(`${subjectSlug}:${Date.now()}`));
+  const eligible = shuffle([...byTopic.entries()].filter(([, ts]) => ts.length >= 4), rand).slice(0, 4);
+  if (eligible.length < 4) throw new HttpError(400, "This subject needs at least four missions for Connections");
+  const tiles = shuffle(eligible.flatMap(([, ts]) => shuffle(ts, rand).slice(0, 4)), rand).map((t) => ({ id: t.id, term: t.term, zh: t.zh }));
+  return { tiles };
+}
+
+export async function checkConnections(subjectSlug: string, termIds: string[]) {
+  const terms = await prisma.term.findMany({ where: { id: { in: termIds }, status: "PUBLISHED", subject: { slug: subjectSlug } }, select: { id: true, topicId: true, topic: { select: { title: true, titleZh: true } } } });
+  if (terms.length !== termIds.length) throw new HttpError(400, "Unknown tiles");
+  const counts = new Map<string, number>();
+  terms.forEach((t) => counts.set(t.topicId ?? "", (counts.get(t.topicId ?? "") ?? 0) + 1));
+  const top = Math.max(...counts.values());
+  if (termIds.length === 4 && top === 4) return { correct: true, oneAway: false, label: terms[0].topic?.title ?? "", labelZh: terms[0].topic?.titleZh ?? "" };
+  return { correct: false, oneAway: top === 3, label: "", labelZh: "" };
+}
+
+export async function solveConnections(subjectSlug: string, termIds: string[]) {
+  const terms = await prisma.term.findMany({ where: { id: { in: termIds }, status: "PUBLISHED", subject: { slug: subjectSlug } }, select: { id: true, topicId: true, topic: { select: { title: true, titleZh: true } } } });
+  const groups = new Map<string, { label: string; labelZh: string; ids: string[] }>();
+  for (const t of terms) { const k = t.topicId ?? ""; const g = groups.get(k) ?? { label: t.topic?.title ?? "", labelZh: t.topic?.titleZh ?? "", ids: [] }; g.ids.push(t.id); groups.set(k, g); }
+  return { groups: [...groups.values()] };
+}
+
+/**
+ * Personal bests for games. The client reports a score, but it is capped by what the server actually
+ * recorded: correct graded answers in "challenge" mode during the last few minutes.
+ */
+export async function saveGameBest(userId: string, game: string, subjectSlug: string, score: number) {
+  let cap = 4; // Connections: at most 4 groups
+  if (game !== "connections") cap = await prisma.reviewLog.count({ where: { userId, mode: game === "sort" ? "lab" : "challenge", correct: true, createdAt: { gte: new Date(Date.now() - 5 * 60_000) } } });
+  if (game === "lightning") cap *= 3; // streak multiplier can triple a correct answer's points
+  if (game === "spell") cap *= 2; // 2 points per word without the audio hint
+  const value = Math.max(0, Math.min(Math.round(score), cap));
+  const key = `${game}:${subjectSlug}`;
+  const prev = await prisma.personalBest.findUnique({ where: { userId_key: { userId, key } } });
+  const isBest = !prev || value > prev.value;
+  if (isBest) await prisma.personalBest.upsert({ where: { userId_key: { userId, key } }, update: { value }, create: { userId, key, value } });
+  if ((game === "connections" || game === "sort") && value > 0) await prisma.xpEvent.create({ data: { userId, amount: Math.min(30, value * (game === "connections" ? 3 : 2)), reason: `game:${game}` } });
+  return { value, isBest, previousBest: prev?.value ?? 0, achievements: await checkAchievements(userId) };
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -5,7 +5,7 @@
  */
 export type StageName = "DISCOVER" | "RECOGNIZE" | "UNDERSTAND" | "APPLY" | "MASTER";
 export type SkillName = "TRANSLATION" | "CONCEPT" | "APPLICATION";
-export type GenKind = "en2zh" | "zh2en" | "def2term" | "term2def" | "cloze" | "clozeChoice" | "written";
+export type GenKind = "en2zh" | "zh2en" | "def2term" | "term2def" | "cloze" | "clozeChoice" | "written" | "spell";
 
 export interface PoolTerm {
   id: string;
@@ -144,6 +144,9 @@ export function buildGenerated(kind: GenKind, target: PoolTerm, pool: PoolTerm[]
         prompt: `Which Chinese term matches “${target.term}”?`, promptZh: `“${target.term}”的中文意思是？`,
         options: options.map((o) => ({ id: o.id, text: o.zh })) };
     case "zh2en":
+      // If another word shares this Chinese translation (e.g. moreover / furthermore = 此外), the question would
+      // have two right answers, so return null and let the caller ask English → Chinese instead.
+      if (pool.some((p) => p.id !== target.id && p.zh === target.zh)) return null;
       return { ...base, kind: "choice", stage: "RECOGNIZE", skill: "TRANSLATION", expectedMs: 6000,
         prompt: `Which English academic term means “${target.zh}”?`, promptZh: `哪个英文术语对应“${target.zh}”？`,
         options: options.map((o) => ({ id: o.id, text: o.term })) };
@@ -161,6 +164,13 @@ export function buildGenerated(kind: GenKind, target: PoolTerm, pool: PoolTerm[]
       return { ...base, kind: "choice", stage: "APPLY", skill: "APPLICATION", expectedMs: 15000,
         prompt: `Complete the AP-style sentence:\n${blanked}`, hintZh: `提示：空格处的概念与“${target.zh}”有关。`,
         options: options.map((o) => ({ id: o.id, text: o.term, textZh: o.zh })) };
+    }
+    case "spell": {
+      // Spell It game: English definition → type the English term. The letter pattern shows only the length,
+      // word breaks and first letter, so it still requires recall (and correct spelling).
+      const pattern = target.term.split(" ").map((w, wi) => [...w].map((ch, ci) => (/[A-Za-z]/.test(ch) && !(wi === 0 && ci === 0) ? "_" : ch)).join(" ")).join("   ");
+      return { ...base, kind: "cloze", stage: "MASTER", skill: "CONCEPT", expectedMs: 20000, ref: `gen:spell:${target.id}:`, qtype: "spell",
+        prompt: `${target.definition}\n\n${pattern.trim()}` };
     }
     case "cloze": {
       const blanked = blankTerm(target.apExample, target.term);

@@ -1,7 +1,7 @@
 {
   "name": "ap-lexicon-desktop",
   "productName": "AP Lexicon",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "Bilingual AP vocabulary mastery \u2014 desktop app",
   "main": "main.mjs",
   "private": true,

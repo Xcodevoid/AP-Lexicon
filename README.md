@@ -43,11 +43,12 @@ On the landing page choose **Try the demo** (isolated demo student, no password)
 | Command | What it does |
 |---|---|
 | `npm run dev` / `npm run build && npm start` | Dev server / production server |
-| `npm test` | 39 unit tests: FSRS scheduler, mastery scoring, grading, gamification, import validation, authorization, question generation, decoder |
-| `npm run test:e2e` | 6 Playwright journeys against a production build (needs a seeded DB and `.env` loaded; see below) |
+| `npm test` | 40 unit tests: FSRS scheduler, mastery scoring, grading, gamification, import validation, authorization, question generation, decoder |
+| `npm run test:e2e` | 7 Playwright journeys (including all five games) against a production build (needs a seeded DB and `.env` loaded; see below) |
 | `npm run typecheck` | TypeScript check |
 | `npm run content:check` | Validate all `.lex` content files (errors fail; `--verbose` lists warnings) |
 | `npm run content:build` | Write `content/build/bundle.json` |
+| `npm run content:check-repeats` | Build every mission × stage session and confirm no question or word repeats |
 | `npm run db:seed` | Re-import content (idempotent upsert; never touches student progress) |
 | `npm run demo:purge [hours]` | Delete demo accounts older than N hours (default 24) |
 
@@ -64,6 +65,8 @@ Running E2E: `npm run build`, then `set -a; . ./.env; set +a; npm run test:e2e`.
 - **Five stages**: Discover; Recognize (EN↔中文 MCQs + 60-second timed match with personal bests); Understand (definition↔term, authored scenarios); Apply (AP-context cloze, authored graph/passage/MCQ items); Master (English-only typed cloze + written response with rubric self-assessment). Immediate feedback with per-option rationales and 中文解析; **unit challenges** use delayed (assessment-style) feedback, 8-minute timer, English only.
 - **Adaptive engine**: FSRS-4.5 scheduler with persistent review logs; daily review queue (overdue first, then weak concepts, goal-subject boost); each review targets the student's weakest dimension. Errors classified as translation / concept / application / confusion-with-related-term.
 - **Three-dimensional mastery** computed only from graded answers (viewing a card is never evidence). Mastered requires all three dimensions ≥ 0.8 with ≥ 2 attempts each and ≥ 1 correct English-only, no-hint application answer — so repeatedly choosing the right translation cannot reach Mastered (unit-tested).
+- **Games** (Games menu, or "Play games" on any map; work for every course): **Lightning Round** (60 s definition → word, streak multipliers), **Connections** (find 4 hidden groups of 4; XP only), **Sort It** (sort scenarios between look-alike concepts), **Spell It** (definition → type the English word), **Boss Battle** (AP-style questions, 3 hearts). Answers are graded on the server and count toward mastery (except Connections); personal bests are capped by answers actually recorded.
+- **No repeats**: each practice session, review and Boss Battle asks a word at most once, replays get a fresh mix, and words sharing a Chinese translation are never asked Chinese → English.
 - **Bilingual Bridge**: Full / Balanced / Exam modes (switchable in the top bar). Hint use is logged per answer and shown as a weekly trend; it never lowers scores or ratings.
 - **Confusion Lab**: 40 comparison pairs with key difference (EN/中文), comparison table, diagram and a server-graded scenario-sorting drill. Pairs are recommended from the student's own confusion errors.
 - **Question Decoder**: deterministic highlighting of academic terms, command verbs, connectors and wording traps; skill detection; guided plan; optional attempt of a practice item (answer revealed only after submitting). Optional server-side AI explanation (see below).

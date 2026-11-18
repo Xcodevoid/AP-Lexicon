@@ -29,6 +29,11 @@ describe("question generation", () => {
     expect(rebuilt.options!.map((o) => o.id)).toEqual(a.options!.map((o) => o.id));
     expect(a.options!.some((o) => o.id === "mc" && o.text === "边际成本")).toBe(true);
   });
+  it("never asks Chinese → English when two words share the same Chinese", () => {
+    const shared = [...pool, T("x1", "moreover", "此外"), T("x2", "furthermore", "此外")];
+    expect(buildGenerated("zh2en", shared[5], shared, "s")).toBeNull();
+    expect(buildGenerated("en2zh", shared[5], shared, "s")).not.toBeNull();
+  });
   it("cloze blanks the term only when it appears in the AP example", () => {
     expect(blankTerm(pool[0].apExample, "marginal cost")).toContain("______");
     expect(blankTerm("No match here", "marginal cost")).toBeNull();

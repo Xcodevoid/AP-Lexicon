@@ -1,13 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Compass, FlaskConical, LayoutDashboard, LineChart, RotateCcw, ScanText, Settings, Shield, Trophy } from "lucide-react";
+import { BookMarked, Compass, FlaskConical, Gamepad2, LayoutDashboard, LineChart, RotateCcw, ScanText, Settings, Shield, Trophy } from "lucide-react";
 import { cn } from "./ui/cn";
 
 const items = [
   { href: "/dashboard", label: "Today", zh: "今日", icon: LayoutDashboard, mobile: true },
   { href: "/subjects", label: "Mastery Map", zh: "掌握地图", icon: Compass, mobile: true },
   { href: "/review", label: "Review", zh: "复习", icon: RotateCcw, mobile: true },
+  { href: "/games", label: "Games", zh: "游戏", icon: Gamepad2, mobile: false },
   { href: "/lab", label: "Confusion Lab", zh: "易混辨析", icon: FlaskConical, mobile: false },
   { href: "/decoder", label: "Question Decoder", zh: "题目解码", icon: ScanText, mobile: false },
   { href: "/notebook", label: "Notebook", zh: "词汇本", icon: BookMarked, mobile: true },
@@ -49,7 +50,7 @@ export function BottomNav({ dueCount }: { dueCount: number }) {
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t hairline bg-[rgb(var(--bg-elev))]/95 backdrop-blur md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       <ul className="grid grid-cols-5">
         {[...mob, { href: "/more", label: "More", zh: "更多", icon: Settings, mobile: true }].map((it) => {
-          const on = it.href === "/more" ? ["/lab", "/decoder", "/progress", "/achievements", "/settings", "/admin"].some((p) => path.startsWith(p)) : path === it.href || path.startsWith(it.href + "/");
+          const on = it.href === "/more" ? ["/games", "/lab", "/decoder", "/progress", "/achievements", "/settings", "/admin"].some((p) => path.startsWith(p)) : path === it.href || path.startsWith(it.href + "/");
           return (
             <li key={it.href}>
               <Link href={it.href} aria-current={on ? "page" : undefined} className={cn("relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium", on ? "text-brand-500" : "text-subtle")}>

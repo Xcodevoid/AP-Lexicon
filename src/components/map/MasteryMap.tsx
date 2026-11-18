@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, BookOpen, Castle, Check, ChevronRight, Lock, Target, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Castle, Check, ChevronRight, Gamepad2, Lock, Target, X } from "lucide-react";
 import type { subjectMap, NodeStatus } from "@/lib/services/stats";
 import { THEMES } from "./themes";
 import { cn } from "../ui/cn";
@@ -79,7 +79,10 @@ export function MasteryMap({ data, initialNode }: { data: MapData; initialNode?:
 
   return (
     <div className="relative">
-      <Link href="/subjects" className="mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-[rgb(var(--fg))]"><ArrowLeft size={16} /> All maps</Link>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <Link href="/subjects" className="inline-flex items-center gap-1 text-sm text-muted hover:text-[rgb(var(--fg))]"><ArrowLeft size={16} /> All maps</Link>
+        <Link href={`/games?subject=${data.subject.slug}`} className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-ink-900 px-3.5 text-sm font-semibold text-white dark:bg-brand-500"><Gamepad2 size={16} /> Play games</Link>
+      </div>
 
       {/* Subject header with overall progress */}
       <header className="surface relative overflow-hidden rounded-3xl p-6 shadow-card md:p-8">

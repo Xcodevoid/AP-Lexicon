@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { FlaskConical, LineChart, ScanText, Settings, Shield, Trophy } from "lucide-react";
+import { FlaskConical, Gamepad2, LineChart, ScanText, Settings, Shield, Trophy } from "lucide-react";
 import { requireUserPage } from "@/lib/auth/session";
 
 export const metadata = { title: "More" };
 export default async function More() {
   const user = await requireUserPage();
   const links = [
+    { href: "/games", label: "Games", zh: "词汇游戏", icon: Gamepad2 },
     { href: "/lab", label: "Confusion Lab", zh: "易混辨析", icon: FlaskConical },
     { href: "/decoder", label: "Question Decoder", zh: "题目解码", icon: ScanText },
     { href: "/progress", label: "Progress analytics", zh: "学习进度", icon: LineChart },
